@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redirecting...</title>
+  <style>
+    body { font-family: system-ui, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #1e293b; color: #fff; text-align: center; }
+    .spinner { width: 40px; height: 40px; border: 3px solid #334155; border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    a { color: #60a5fa; }
+  </style>
+</head>
+<body>
+  <div>
+    <div class="spinner"></div>
+    <p>Redirecting to ticketing app...</p>
+    <p id="error" style="display:none; color: #f87171;"></p>
+    <p id="link" style="margin-top: 1rem; font-size: 0.875rem;"></p>
+  </div>
+  <script>
+    (function() {
+      const params = new URLSearchParams(window.location.search);
+      const d = params.get('d') || params.get('device');
+      const errorEl = document.getElementById('error');
+      const linkEl = document.getElementById('link');
+
+      if (!d) {
+        errorEl.textContent = 'Invalid link. Missing device ID.';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      fetch('config.json?t=' + Date.now())
+        .then(r => r.json())
+        .then(config => {
+          const base = (config.tunnelUrl || '').replace(/\/$/, '');
+          if (!base) throw new Error('Tunnel URL not configured');
+          const url = base + '/r?d=' + encodeURIComponent(d);
+          window.location.replace(url);
+        })
+        .catch(err => {
+          errorEl.textContent = 'Could not load redirect config. ' + err.message;
+          errorEl.style.display = 'block';
+          linkEl.innerHTML = 'Contact IT to update the redirect.';
+        });
+    })();
+  </script>
+</body>
+</html>
